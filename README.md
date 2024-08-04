@@ -12,8 +12,7 @@ E-mail supervisor AT bothive.xyz for access.
 
 `.env` file
 ```
-# Replace with your API key
-API_TOKEN=OWpJ4FPOzugJzBbxMJQwOryZgg3QMgzeZTvdI9tICQy
+API_TOKEN=<API_TOKEN>
 # LOG_LEVEL=info
 ```
 
