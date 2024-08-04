@@ -1,7 +1,5 @@
 import { Command } from "commander";
-// import api, { setAuthToken } from "../../api";
-// import { userCredentialsSchema } from "../../schema";
-import logger from "@/logger";
+import logger from "@/util/logger";
 
 export const loginCommand = new Command("login")
   .description("Authenticate user and generate bearer token")

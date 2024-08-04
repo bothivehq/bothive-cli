@@ -1,9 +1,9 @@
 import { Command } from "commander";
-import logger from "@/logger";
-import * as esbuild from "esbuild";
+import logger from "@/util/logger";
 import * as fs from "fs-extra";
 import * as path from "path";
 import { deployBot } from "@/api-client";
+import { bundleCode, ensureDirectory, cleanupFile } from "@/util";
 
 export const deployBotCommand = new Command("deploy")
   .description("Deploy your bot")
@@ -16,46 +16,41 @@ export const deployBotCommand = new Command("deploy")
     try {
       logger.info("Starting bot deployment process");
 
-      // Ensure the entry file exists
       if (!fs.existsSync(options.entry)) {
         throw new Error(`Entry file ${options.entry} does not exist`);
       }
 
-      // Read package.json
+      const tmpDir = path.join(process.cwd(), ".bothive");
+      const outFile = path.join(tmpDir, "index.cjs");
+
+      await ensureDirectory(tmpDir);
+
+      await bundleCode({
+        entry: options.entry,
+        outDir: tmpDir,
+        outFile: outFile,
+      });
+
+      const bundledCode = await fs.readFile(outFile, "utf-8");
+
       const packageJsonPath = path.join(process.cwd(), "package.json");
       const packageJson = await fs.readJSON(packageJsonPath);
 
-      // Bundle the code
-      const result = await esbuild.build({
-        entryPoints: [options.entry],
-        bundle: true,
-        minify: true,
-        platform: "node",
-        target: "node14",
-        write: false, // Don't write to disk, we want the content as a string
-      });
+      const botData = {
+        name: packageJson.name,
+        package_json: JSON.stringify(packageJson),
+        script: bundledCode,
+        start_command: `node index.cjs`,
+      };
 
-      if (result.outputFiles && result.outputFiles.length > 0) {
-        const bundledCode = result.outputFiles[0].text;
-
-        // Prepare the bot data
-        const botData = {
-          name: packageJson.name,
-          package_json: JSON.stringify(packageJson),
-          script: bundledCode,
-          start_command: `node ${path.basename(options.entry)}`,
-        };
-
-        // Deploy the bot
-        await deployBot({ body: botData });
-        logger.info(`Bot '${packageJson.name}' deployed successfully`);
-      } else {
-        throw new Error("Failed to generate bundled code");
-      }
+      await deployBot({ body: botData });
+      logger.info(`Bot '${packageJson.name}' deployed successfully`);
     } catch (error) {
       logger.error("Error deploying bot", { error });
       console.error(
         `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`
       );
+    } finally {
+      await cleanupFile(path.join(process.cwd(), ".bothive", "index.cjs"));
     }
   });

@@ -1,5 +1,5 @@
 import { listBots } from "@/api-client";
-import logger from "@/logger";
+import logger from "@/util/logger";
 import { Command } from "commander";
 import Table from "cli-table3";
 
@@ -9,11 +9,6 @@ export const listBotsCommand = new Command("list")
   .action(async () => {
     try {
       const { data: bots } = await listBots();
-
-      if (!bots) {
-        logger.warn("BotHive Unavailable");
-        return;
-      }
 
       if (bots.length === 0) {
         logger.info("No bots found");

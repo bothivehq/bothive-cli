@@ -6,6 +6,7 @@ import { runBotCommand } from "./run";
 import { listRunsCommand } from "./listRuns";
 import { showBotCommand } from "./show";
 import { runStatusCommand } from "./runStatus";
+import { testBotCommand } from "./test";
 
 export const botCommand = new Command("bots")
   .alias("bot")
@@ -13,6 +14,7 @@ export const botCommand = new Command("bots")
   .description("Manage your bots on BotHive")
   .addCommand(listBotsCommand)
   .addCommand(showBotCommand)
+  .addCommand(testBotCommand)
   .addCommand(deployBotCommand)
   .addCommand(destroyBotCommand)
   .addCommand(listRunsCommand)

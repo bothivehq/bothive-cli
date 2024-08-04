@@ -1,9 +1,9 @@
 import { createClient } from "@hey-api/openapi-ts";
 import axios from "axios";
 import fs from "fs";
-import env from "./env";
+import env from "./util/env";
 
-const BOTHIVE_API_SPEC = `${env.API_BASE_URL}/api/openapi`;
+const BOTHIVE_API_SPEC = `${env.BOTHIVE_API_URL}/api/openapi`;
 
 const run = async () => {
   try {

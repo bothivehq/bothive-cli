@@ -1,41 +1,19 @@
 import { Command } from "commander";
-import logger from "@/logger";
-import { listBots, deleteBot } from "@/api-client";
-import prompts from "prompts";
+import logger from "@/util/logger";
+import { deleteBot } from "@/api-client";
 import chalk from "chalk";
+import { selectBot } from "@/util";
 
 export const destroyBotCommand = new Command("destroy")
   .description("Destroy a Bot")
   .option("-i, --id <botId>", "Specify the bot ID to destroy")
   .action(async (options: { id?: string }) => {
-    let botId: number = options.id ? parseInt(options.id) : -1;
+    const botId = options.id
+      ? parseInt(options.id)
+      : await selectBot("Select a bot to destroy:");
 
     if (botId === -1) {
-      const { data: bots } = await listBots();
-
-      if (bots.length === 0) {
-        console.log(chalk.yellow("No bots found."));
-        return;
-      }
-
-      const botChoices = bots.map((bot) => ({
-        title: `${bot.name} (ID: ${bot.id})`,
-        value: bot.id,
-      }));
-
-      const response = await prompts({
-        type: "select",
-        name: "selectedBot",
-        message: "Select a bot to destroy:",
-        choices: botChoices,
-      });
-
-      if (!response.selectedBot) {
-        console.log(chalk.yellow("Operation canceled."));
-        return;
-      }
-
-      botId = response.selectedBot;
+      return;
     }
 
     try {

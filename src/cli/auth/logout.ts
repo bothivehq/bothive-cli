@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import logger from "@/logger";
+import logger from "@/util/logger";
 
 export const logoutCommand = new Command("logout")
   .description("Logout")

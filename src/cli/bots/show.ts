@@ -1,9 +1,10 @@
 import { listBots, showBot, type Bot } from "@/api-client";
-import logger from "@/logger";
+import logger from "@/util/logger";
 import { Command } from "commander";
 import chalk from "chalk";
 import Table from "cli-table3";
 import prompts from "prompts";
+import { selectBot } from "@/util";
 
 const formatBotStatus = (bot: Bot): string[] => [
   bot.id?.toString() || "N/A",
@@ -18,35 +19,11 @@ export const showBotCommand = new Command("show")
   .action(async (options: { id?: string }) => {
     logger.info("Getting bot status", { options });
     try {
-      let botId = options.id ? parseInt(options.id) : undefined;
+      const botId = options.id
+        ? parseInt(options.id)
+        : await selectBot("Select a bot to get run status for:");
 
-      if (!botId) {
-        const { data: bots } = await listBots();
-        if (bots.length === 0) {
-          console.log(chalk.yellow("No bots found."));
-          return;
-        }
-
-        const botResponse = await prompts({
-          type: "select",
-          name: "selectedBot",
-          message: "Select a bot:",
-          choices: bots.map((bot) => ({
-            title: `${bot.name} (ID: ${bot.id})`,
-            value: bot.id,
-          })),
-        });
-
-        if (!botResponse.selectedBot) {
-          console.log(chalk.yellow("Operation canceled."));
-          return;
-        }
-
-        botId = botResponse.selectedBot;
-      }
-
-      if (botId === undefined) {
-        console.log(chalk.yellow("No bot selected. Operation canceled."));
+      if (botId === -1) {
         return;
       }
 

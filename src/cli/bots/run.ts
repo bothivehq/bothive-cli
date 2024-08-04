@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import logger from "@/logger";
+import logger from "@/util/logger";
 import { listBots, triggerBotRun } from "@/api-client";
 import prompts from "prompts";
 import chalk from "chalk";

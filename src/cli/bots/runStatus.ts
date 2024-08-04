@@ -1,15 +1,9 @@
 import { Command } from "commander";
-import logger from "@/logger";
-import {
-  listBots,
-  listBotRuns,
-  getBotRunStatus,
-  type BotRun,
-  type BotRunStatus,
-} from "@/api-client";
-import prompts from "prompts";
+import logger from "@/util/logger";
+import { getBotRunStatus, type BotRun, type BotRunStatus } from "@/api-client";
 import chalk from "chalk";
 import Table from "cli-table3";
+import { selectBot, selectBotRun } from "@/util/api-helpers";
 
 const formatRunDetails = (run: BotRun): string[] => [
   run.id?.toString() || "N/A",
@@ -27,57 +21,20 @@ export const runStatusCommand = new Command("run-status")
   .option("-b, --bot-id <botId>", "Specify the bot ID")
   .option("-r, --run-id <runId>", "Specify the run ID")
   .action(async (options: { botId?: string; runId?: string }) => {
-    let botId = options.botId ? parseInt(options.botId) : undefined;
-    let runId = options.runId;
+    const botId = options.botId
+      ? parseInt(options.botId)
+      : await selectBot("Select a bot to get run status for:");
 
-    if (!botId) {
-      const { data: bots } = await listBots();
-      if (bots.length === 0) {
-        console.log(chalk.yellow("No bots found."));
-        return;
-      }
-
-      const botResponse = await prompts({
-        type: "select",
-        name: "selectedBot",
-        message: "Select a bot:",
-        choices: bots.map((bot) => ({
-          title: `${bot.name} (ID: ${bot.id})`,
-          value: bot.id,
-        })),
-      });
-
-      if (!botResponse.selectedBot) {
-        console.log(chalk.yellow("Operation canceled."));
-        return;
-      }
-
-      botId = botResponse.selectedBot;
+    if (botId === -1) {
+      return;
     }
 
-    if (!runId) {
-      const { data: runs } = await listBotRuns({ path: { id: botId! } });
-      if (Object.keys(runs).length === 0) {
-        console.log(chalk.yellow("No runs found for the selected bot."));
-        return;
-      }
+    const runId =
+      options.runId ??
+      (await selectBotRun(botId, "Select a run to get status for:"));
 
-      const runResponse = await prompts({
-        type: "select",
-        name: "selectedRun",
-        message: "Select a run:",
-        choices: Object.entries(runs).map(([id, run]) => ({
-          title: `Run ID: ${(run as BotRun).id}, Inserted At: ${(run as BotRun).inserted_at}`,
-          value: (run as BotRun).id,
-        })),
-      });
-
-      if (!runResponse.selectedRun) {
-        console.log(chalk.yellow("Operation canceled."));
-        return;
-      }
-
-      runId = runResponse.selectedRun;
+    if (runId === null) {
+      return;
     }
 
     try {
